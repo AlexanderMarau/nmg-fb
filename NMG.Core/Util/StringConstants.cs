@@ -18,5 +18,9 @@
 
         public static string SYBASE_CONN_STR_TEMPLATE =
             "Provider=ASAProv;UID=uidname;PWD=password;DatabaseName=databasename;EngineName=enginename;CommLinks=TCPIP{host=servername}";
+
+        public static string FIREBIRD_CONN_STR_TEMPLATE =
+            "data source=server;initial catalog=database.gdb;user id=SYSDBA;password=masterkey;character set=WIN1252";
+
     }
 }
