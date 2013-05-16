@@ -1,0 +1,65 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using NMG.Core.Reader;
+using NUnit.Framework;
+
+namespace NMG.Tests.Reader
+{
+    [TestFixture]
+    class FirebirdMetadataReaderTest
+    {
+        private FirebirdMetadataReader metadataReader;
+
+        [SetUp]
+        public void SetUp()
+        {
+            const string connectionString = @"data source=Testing;initial catalog=localhost:C:\temp\NMG_TEST.fdb;user id=SYSDBA;password=masterkey;character set=WIN1252";
+            metadataReader = new FirebirdMetadataReader(connectionString);
+        }
+
+        [Test()]
+        public void GetOwnersTest()
+        {
+            var owners = metadataReader.GetOwners();
+            Assert.IsNotNull(owners);
+            Assert.IsTrue(owners.Any());
+            Assert.IsTrue(owners.Contains("SYSDBA"));
+        }
+
+        [Test]
+        public void GetTableTest()
+        {
+            var tables = metadataReader.GetTables("SYSDBA");
+            Assert.IsNotNull(tables);
+            Assert.IsNotEmpty(tables);
+            Assert.IsTrue(tables.Any(t => string.Equals(t.Name, "PRODUCTS", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(tables.Any(t => string.Equals(t.Name, "STORES", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(tables.Any(t => string.Equals(t.Name, "CATEGORIES", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(tables.Any(t => string.Equals(t.Name, "INVENTORIES", StringComparison.OrdinalIgnoreCase)));
+        }
+
+        [Test]
+        public void GetTableDetailsTest()
+        {
+            var tables = metadataReader.GetTables("SYSDBA");
+            var tableInv = tables.Single(t => string.Equals(t.Name, "INVENTORIES", StringComparison.OrdinalIgnoreCase));
+            var invColumns = metadataReader.GetTableDetails(tableInv, "SCOTT");
+            Assert.IsNotNull(invColumns);
+            Assert.IsTrue(invColumns.Any());
+            Assert.AreEqual(invColumns.Count, 6);
+            Assert.AreEqual(tableInv.PrimaryKey.Type, NMG.Core.Domain.PrimaryKeyType.PrimaryKey);
+            Assert.AreEqual(tableInv.ForeignKeys.Count, 2);
+            var columnId = invColumns.Single(s => string.Equals(s.Name, "ID"));
+            var columnStoreId = invColumns.Single(s => string.Equals(s.Name, "STORE_ID"));
+
+            Assert.IsTrue(string.Equals(columnId.DataType, "BIGINT"));
+            Assert.IsTrue(string.Equals(columnId.MappedDataType, typeof(Int64).ToString()), "Invalid id mapped data type");
+
+            Assert.IsTrue(string.Equals(columnStoreId.DataType, "INTEGER"));
+            Assert.IsTrue(string.Equals(columnStoreId.MappedDataType, typeof(Int32).ToString()), "Invalid store id mapped data type");
+             
+        }
+    }
+}
