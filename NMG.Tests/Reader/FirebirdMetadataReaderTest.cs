@@ -59,7 +59,19 @@ namespace NMG.Tests.Reader
 
             Assert.IsTrue(string.Equals(columnStoreId.DataType, "INTEGER"));
             Assert.IsTrue(string.Equals(columnStoreId.MappedDataType, typeof(Int32).ToString()), "Invalid store id mapped data type");
-             
+        }
+
+        [Test]
+        public void GetSequencesTest()
+        {
+            var sequences = metadataReader.GetSequences("SYSDBA");
+            Assert.IsNotNull(sequences);
+            Assert.IsNotEmpty(sequences);
+            Assert.AreEqual(sequences.Count, 4);
+            Assert.IsTrue(sequences.Any(s => string.Equals(s, "GEN_INVENTORY_ID", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(sequences.Any(s => string.Equals(s, "GEN_CATEGORY_ID", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(sequences.Any(s => string.Equals(s, "GEN_PRODUCT_ID", StringComparison.OrdinalIgnoreCase)));
+            Assert.IsTrue(sequences.Any(s => string.Equals(s, "GEN_STORE_ID", StringComparison.OrdinalIgnoreCase)));
         }
     }
 }
