@@ -19,6 +19,8 @@ namespace NMG.Core
                     return new SqliteMetadataReader(connectionStr);
                 case ServerType.Sybase:
                     return new SybaseMetadataReader(connectionStr);
+                case ServerType.Firebird:
+                    return new FirebirdMetadataReader(connectionStr);
                 default:
                     return new NpgsqlMetadataReader(connectionStr);
             }
