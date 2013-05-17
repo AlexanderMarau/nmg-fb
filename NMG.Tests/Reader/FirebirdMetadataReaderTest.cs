@@ -10,12 +10,14 @@ namespace NMG.Tests.Reader
     [TestFixture]
     class FirebirdMetadataReaderTest
     {
+        const string connectionString = @"data source=Testing;initial catalog=localhost:C:\temp\NMG_TEST.fdb;user id=SYSDBA;password=masterkey;character set=WIN1252";
+        const string dbowner = "SYSDBA";
+
         private FirebirdMetadataReader metadataReader;
 
         [SetUp]
         public void SetUp()
         {
-            const string connectionString = @"data source=Testing;initial catalog=localhost:C:\temp\NMG_TEST.fdb;user id=SYSDBA;password=masterkey;character set=WIN1252";
             metadataReader = new FirebirdMetadataReader(connectionString);
         }
 
@@ -25,13 +27,13 @@ namespace NMG.Tests.Reader
             var owners = metadataReader.GetOwners();
             Assert.IsNotNull(owners);
             Assert.IsTrue(owners.Any());
-            Assert.IsTrue(owners.Contains("SYSDBA"));
+            Assert.IsTrue(owners.Contains(dbowner));
         }
 
         [Test]
         public void GetTableTest()
         {
-            var tables = metadataReader.GetTables("SYSDBA");
+            var tables = metadataReader.GetTables(dbowner);
             Assert.IsNotNull(tables);
             Assert.IsNotEmpty(tables);
             Assert.IsTrue(tables.Any(t => string.Equals(t.Name, "PRODUCTS", StringComparison.OrdinalIgnoreCase)));
@@ -43,9 +45,9 @@ namespace NMG.Tests.Reader
         [Test]
         public void GetTableDetailsTest()
         {
-            var tables = metadataReader.GetTables("SYSDBA");
+            var tables = metadataReader.GetTables(dbowner);
             var tableInv = tables.Single(t => string.Equals(t.Name, "INVENTORIES", StringComparison.OrdinalIgnoreCase));
-            var invColumns = metadataReader.GetTableDetails(tableInv, "SCOTT");
+            var invColumns = metadataReader.GetTableDetails(tableInv, dbowner);
             Assert.IsNotNull(invColumns);
             Assert.IsTrue(invColumns.Any());
             Assert.AreEqual(invColumns.Count, 6);
@@ -62,9 +64,19 @@ namespace NMG.Tests.Reader
         }
 
         [Test]
+        public void GetHasManyTest()
+        {
+            var tables = metadataReader.GetTables(dbowner);
+            var table = tables.Single(t => string.Equals(t.Name, "PRODUCTS", StringComparison.OrdinalIgnoreCase));
+            var columns = metadataReader.GetTableDetails(table, dbowner);
+            var hasmany = table.HasManyRelationships.FirstOrDefault(h => string.Equals(h.Reference, "INVENTORIES"));
+            Assert.IsNotNull(hasmany);
+        }
+
+        [Test]
         public void GetSequencesTest()
         {
-            var sequences = metadataReader.GetSequences("SYSDBA");
+            var sequences = metadataReader.GetSequences(dbowner);
             Assert.IsNotNull(sequences);
             Assert.IsNotEmpty(sequences);
             Assert.AreEqual(sequences.Count, 4);

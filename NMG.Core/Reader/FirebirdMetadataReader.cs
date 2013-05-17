@@ -64,20 +64,20 @@ namespace NMG.Core.Reader
             using (conn)
             {
                 // Get primary keys 
-                // TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME
+                // Restrictions: TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME
                 DataTable tablePK = conn.GetSchema("primarykeys", new string[] { null, null, table.Name });
                 List<string> primaryKeyColumns = (from DataRow row in tablePK.Rows select row.Field<string>("COLUMN_NAME")).ToList();
 
                 // Get foreign keys
-                // TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME 
+                // Restrictions: TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME 
                 DataTable tableFK = conn.GetSchema("foreignkeys", new string[] { null, null, table.Name });
                 var foreignKeyNames = from DataRow row in tableFK.Rows select row.Field<string>("CONSTRAINT_NAME");
-                
+
                 // Get foregign columns and reference tables
                 var foreignKeyColumns = new List<ForeignRelation>();
                 foreach (var fk in foreignKeyNames)
                 {
-                    // TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME
+                    // Restrictions: TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME
                     DataTable tableFKColumns = conn.GetSchema("foreignkeycolumns",
                                                               new string[] {null, null, table.Name, fk});
                     foreach (DataRow row in tableFKColumns.Rows)
@@ -92,13 +92,15 @@ namespace NMG.Core.Reader
 
                     }
                 }
-                //List<string> foreignKeyNamens = (from DataRow row in tableFK.Rows select row.Field<string>("COLUMN_NAME")).ToList();
-                
-                // Get Table Columns
-                // Restrictions:
-                // TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
-                DataTable tableColumns = conn.GetSchema("columns", new string[] {null, null, table.Name});
 
+                // Get Unique keys
+                // Restrictions: TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME
+                //DataTable tableUK = conn.GetSchema("uniquekeys", new string[] { null, null, table.Name });
+
+
+                // Get Table Columns
+                // Restrictions: TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
+                DataTable tableColumns = conn.GetSchema("columns", new string[] {null, null, table.Name});
 
                 foreach (DataRow row in tableColumns.Rows)
                 {
@@ -246,8 +248,76 @@ group by 1";
 
         public IList<HasMany> DetermineHasManyRelationships(Table table)
         {
-            // TODO Implement DetermineHasManyRelationships
-            return null;
+
+            // From GetSchema("foreignkeycolumns")
+            string sql = @"SELECT
+	null AS CONSTRAINT_CATALOG,
+	null AS CONSTRAINT_SCHEMA,
+	co.rdb$constraint_name AS CONSTRAINT_NAME,
+	null AS TABLE_CATALOG,
+	null AS TABLE_SCHEMA,
+	co.rdb$relation_name AS TABLE_NAME,
+	coidxseg.rdb$field_name AS COLUMN_NAME,
+	null as REFERENCED_TABLE_CATALOG,
+	null as REFERENCED_TABLE_SCHEMA,
+	refidx.rdb$relation_name as REFERENCED_TABLE_NAME,
+	refidxseg.rdb$field_name AS REFERENCED_COLUMN_NAME,
+	coidxseg.rdb$field_position as ORDINAL_POSITION
+FROM rdb$relation_constraints co
+	INNER JOIN rdb$ref_constraints ref ON co.rdb$constraint_name = ref.rdb$constraint_name
+	INNER JOIN rdb$indices tempidx ON co.rdb$index_name = tempidx.rdb$index_name
+	INNER JOIN rdb$index_segments coidxseg ON co.rdb$index_name = coidxseg.rdb$index_name
+	INNER JOIN rdb$indices refidx ON refidx.rdb$index_name = tempidx.rdb$foreign_key
+	INNER JOIN rdb$index_segments refidxseg ON refidxseg.rdb$index_name = refidx.rdb$index_name AND refidxseg.rdb$field_position = coidxseg.rdb$field_position
+WHERE
+    co.rdb$constraint_type = 'FOREIGN KEY'
+    AND refidx.rdb$relation_name = " + string.Format("'{0}'", table);
+
+            var hasManyRelationships = new List<HasMany>();
+            var conn = new FbConnection(connectionStr);
+            conn.Open();
+            try
+            {
+                using (conn)
+                {
+                    using (var command = new FbCommand())
+                    {
+                        command.Connection = conn;
+                        command.CommandText = sql;
+
+                        using (FbDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var constraintName = reader["CONSTRAINT_NAME"].ToString().Trim();
+                                var fkColumnName = reader["COLUMN_NAME"].ToString().Trim();
+                                var existing =
+                                    hasManyRelationships.FirstOrDefault(hm => hm.ConstraintName == constraintName);
+                                if (existing == null)
+                                {
+                                    var newHasManyItem = new HasMany
+                                        {
+                                            ConstraintName = constraintName,
+                                            Reference = reader["TABLE_NAME"].ToString().Trim()
+                                        };
+                                    newHasManyItem.AllReferenceColumns.Add(fkColumnName);
+                                    hasManyRelationships.Add(newHasManyItem);
+
+                                }
+                                else
+                                {
+                                    existing.AllReferenceColumns.Add(fkColumnName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return hasManyRelationships;
         }
     }
 }

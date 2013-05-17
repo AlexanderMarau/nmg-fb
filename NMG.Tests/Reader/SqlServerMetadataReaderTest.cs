@@ -64,6 +64,15 @@ namespace NMG.Tests.Reader
         }
 
         [Test]
+        public void GetHasManyTest()
+        {
+            var tables = metadataReader.GetTables(dbowner);
+            var table = tables.Single(t => string.Equals(t.Name, "PRODUCTS", StringComparison.OrdinalIgnoreCase));
+            var columns = metadataReader.GetTableDetails(table, dbowner);
+            Assert.IsTrue(table.HasManyRelationships.Count > 0);
+        }
+
+        [Test]
         public void GetSequencesTest()
         {
             var sequences = metadataReader.GetSequences(dbowner);
