@@ -1,4 +1,5 @@
 using System;
+using FirebirdSql.Data.FirebirdClient;
 using NMG.Core.Domain;
 
 namespace NMG.Core
@@ -56,6 +57,8 @@ namespace NMG.Core
                     return MapFromPostgreDBType(dataType, dataLength, dataPrecision, dataScale);
                 case ServerType.Sybase:
                     return MapFromSqlServerDBType(dataType, dataLength, dataPrecision, dataScale);
+                case ServerType.Firebird:
+                    return MapFromFirebirdDBType(dataType, dataLength, dataPrecision, dataScale);
             }
             return MapFromDBType(dataType, dataLength, dataPrecision, dataScale);
         }
@@ -151,6 +154,55 @@ namespace NMG.Core
         {
             return MapFromDBType(dataType, dataLength, dataPrecision, dataScale);
         }
+
+        private Type MapFromFirebirdDBType(string dataType, int? dataLength, int? dataPrecision, int? dataScale)
+        {
+            switch (dataType.ToUpperInvariant())
+            {
+                case "ARRAY":
+                    return typeof (System.Array);
+
+                case "BLOB":
+                    return typeof (System.Byte[]);
+
+                case "BLOB SUB_TYPE 1":
+                    return typeof (System.String);
+
+                case "CHAR":
+                case "VARCHAR":
+                    return typeof (System.String);
+
+                case "SMALLINT":
+                    return typeof (System.Int16);
+
+                case "INTEGER":
+                    return typeof (System.Int32);
+
+                case "FLOAT":
+                    return typeof (System.Single);
+
+                case "DOUBLE PRECISION":
+                    return typeof (System.Double);
+
+                case "BIGINT":
+                    return typeof (System.Int64);
+
+                case "NUMERIC":
+                case "DECIMAL":
+                    return typeof (System.Decimal);
+
+                case "DATE":
+                case "TIMESTAMP":
+                    return typeof (System.DateTime);
+
+                case "TIME":
+                    return typeof (System.TimeSpan);
+
+                default:
+                    return null;
+            }
+        }
+
 
         private Type MapFromDBType(string dataType, int? dataLength, int? dataPrecision, int? dataScale)
         {

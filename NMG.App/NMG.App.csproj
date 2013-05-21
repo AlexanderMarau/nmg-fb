@@ -56,6 +56,10 @@
     <Reference Include="FastColoredTextBox">
       <HintPath>..\Lib\FastColoredTextBox\FastColoredTextBox.dll</HintPath>
     </Reference>
+    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=2.7.7.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\Firebird-NETProvider-3.0.2.0-NET35\FirebirdSql.Data.FirebirdClient.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Data.ConnectionUI">
       <HintPath>..\Lib\Microsoft.Data.ConnectionUI\Microsoft.Data.ConnectionUI.dll</HintPath>
     </Reference>
@@ -94,6 +98,20 @@
       <DependentUpon>ConnectionDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="DataConnectionConfiguration.cs" />
+    <Compile Include="Firebird\FbDataConnectionDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Firebird\FbDataConnectionDialog.Designer.cs">
+      <DependentUpon>FbDataConnectionDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Firebird\FbConnectionProperties.cs" />
+    <Compile Include="Firebird\FbDataConnectionUIControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Firebird\FbDataConnectionUIControl.Designer.cs">
+      <DependentUpon>FbDataConnectionUIControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Firebird\FbProvider.cs" />
     <Compile Include="IDataConnectionConfiguration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -103,6 +121,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ConnectionDialog.resx">
       <DependentUpon>ConnectionDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Firebird\FbDataConnectionDialog.resx">
+      <DependentUpon>FbDataConnectionDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Firebird\FbDataConnectionUIControl.resx">
+      <DependentUpon>FbDataConnectionUIControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

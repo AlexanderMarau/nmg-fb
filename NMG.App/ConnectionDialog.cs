@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Data.ConnectionUI;
+using NHibernateMappingGenerator.Firebird;
 using NMG.Core.Domain;
 using NMG.Core.Util;
 
@@ -100,6 +101,8 @@ namespace NHibernateMappingGenerator
                     return StringConstants.SQLITE_CONN_STR_TEMPLATE;
                 case ServerType.Sybase:
                     return StringConstants.SYBASE_CONN_STR_TEMPLATE;
+                case ServerType.Firebird:
+                    return StringConstants.FIREBIRD_CONN_STR_TEMPLATE;
                 default:
                     return StringConstants.POSTGRESQL_CONN_STR_TEMPLATE;
             }
@@ -131,10 +134,23 @@ namespace NHibernateMappingGenerator
 
         private void OnConnectionStringButtonClick(object sender, EventArgs e)
         {
+            if (Connection.Type == ServerType.Firebird)
+            {
+                ShowFirebirdDataConnectionDialog();
+            }
+            else
+            {
+                ShowDefaultConnectionDialog();
+            }
+        }
+
+        private void ShowDefaultConnectionDialog()
+        {
             // Using the microsoft connection dialog as used in visual studio
             // http://archive.msdn.microsoft.com/Connection/Release/ProjectReleases.aspx?ReleaseId=3863
             var dialogResult = DialogResult.Cancel;
             var connectionString = string.Empty;
+
 
             var dcd = new DataConnectionDialog();
 
@@ -166,7 +182,40 @@ namespace NHibernateMappingGenerator
                     BindData();
                 }
             }
+        }
 
+        private void ShowFirebirdDataConnectionDialog()
+        {
+            // Using custom Firebird connection Dialog
+            var dialogResult = DialogResult.Cancel;
+            var connectionString = string.Empty;
+
+            var dcd = new FbDataConnectionDialog();
+
+            try
+            {
+                CaptureConnection();
+                if (Connection.ConnectionString != GetDefaultConnectionStringForServerType(Connection.Type))
+                {
+                    dcd.ConnectionString = Connection.ConnectionString;
+                }
+
+                dialogResult = dcd.ShowDialog();
+                connectionString = dcd.ConnectionString;
+            }
+            catch (ArgumentException)
+            {
+                dcd.ConnectionString = string.Empty;
+                dialogResult = dcd.ShowDialog();
+            }
+            finally
+            {
+                if (dialogResult == DialogResult.OK)
+                {
+                    Connection.ConnectionString = connectionString;
+                    BindData();
+                }
+            }
         }
 
     }
