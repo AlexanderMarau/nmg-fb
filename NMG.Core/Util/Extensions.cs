@@ -65,5 +65,10 @@ namespace NMG.Core.Util
             TextInfo textInfo = cultureInfo.TextInfo;
             return textInfo.ToTitleCase(text);
         }
+
+        public static string Quoted(this string text)
+        {
+            return "'" + text + "'";
+        }
     }
 }
