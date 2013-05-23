@@ -102,10 +102,10 @@ namespace NHibernateMappingGenerator
 
             _currentConnection = (Connection) connectionNameComboBox.SelectedItem;
 
-            pOracleOnlyOptions.Hide();
+            sequenceOptionsPanel.Hide();
 
-            if (_currentConnection.Type == ServerType.Oracle)
-                pOracleOnlyOptions.Show();
+            if ((_currentConnection.Type == ServerType.Oracle) || (_currentConnection.Type == ServerType.Firebird))
+                sequenceOptionsPanel.Show();
         }
 
 
@@ -526,6 +526,7 @@ namespace NHibernateMappingGenerator
                 sequencesComboBox.Items.Clear();
                 if (sequences != null && sequences.Any())
                 {
+                    sequencesComboBox.Items.Add(""); // No sequence
                     sequencesComboBox.Items.AddRange(sequences.ToArray());
                     sequencesComboBox.Enabled = true;
                     sequencesComboBox.SelectedIndex = 0;

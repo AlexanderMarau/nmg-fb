@@ -84,7 +84,7 @@ namespace NHibernateMappingGenerator
             this.namespaceMapTextBox = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.connectionNameComboBox = new System.Windows.Forms.ComboBox();
-            this.pOracleOnlyOptions = new System.Windows.Forms.Panel();
+            this.sequenceOptionsPanel = new System.Windows.Forms.Panel();
             this.connectionButton = new System.Windows.Forms.Button();
             this.advanceSettingsTabPage = new System.Windows.Forms.TabPage();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
@@ -152,7 +152,7 @@ namespace NHibernateMappingGenerator
             ((System.ComponentModel.ISupportInitialize)(this.domainCodeFastColoredTextBox)).BeginInit();
             this.groupBox5.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            this.pOracleOnlyOptions.SuspendLayout();
+            this.sequenceOptionsPanel.SuspendLayout();
             this.advanceSettingsTabPage.SuspendLayout();
             this.groupBox10.SuspendLayout();
             this.groupBox9.SuspendLayout();
@@ -655,7 +655,7 @@ namespace NHibernateMappingGenerator
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.connectionNameComboBox);
-            this.groupBox4.Controls.Add(this.pOracleOnlyOptions);
+            this.groupBox4.Controls.Add(this.sequenceOptionsPanel);
             this.groupBox4.Controls.Add(this.dbConnStrLabel);
             this.groupBox4.Controls.Add(this.connectionButton);
             this.groupBox4.Controls.Add(this.connectBtn);
@@ -677,16 +677,16 @@ namespace NHibernateMappingGenerator
             this.connectionNameComboBox.Sorted = true;
             this.connectionNameComboBox.TabIndex = 21;
             // 
-            // pOracleOnlyOptions
+            // sequenceOptionsPanel
             // 
-            this.pOracleOnlyOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.sequenceOptionsPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pOracleOnlyOptions.Controls.Add(this.label5);
-            this.pOracleOnlyOptions.Controls.Add(this.sequencesComboBox);
-            this.pOracleOnlyOptions.Location = new System.Drawing.Point(597, 19);
-            this.pOracleOnlyOptions.Name = "pOracleOnlyOptions";
-            this.pOracleOnlyOptions.Size = new System.Drawing.Size(559, 43);
-            this.pOracleOnlyOptions.TabIndex = 20;
+            this.sequenceOptionsPanel.Controls.Add(this.label5);
+            this.sequenceOptionsPanel.Controls.Add(this.sequencesComboBox);
+            this.sequenceOptionsPanel.Location = new System.Drawing.Point(597, 19);
+            this.sequenceOptionsPanel.Name = "sequenceOptionsPanel";
+            this.sequenceOptionsPanel.Size = new System.Drawing.Size(559, 43);
+            this.sequenceOptionsPanel.TabIndex = 20;
             // 
             // connectionButton
             // 
@@ -1265,8 +1265,8 @@ namespace NHibernateMappingGenerator
             this.groupBox5.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
-            this.pOracleOnlyOptions.ResumeLayout(false);
-            this.pOracleOnlyOptions.PerformLayout();
+            this.sequenceOptionsPanel.ResumeLayout(false);
+            this.sequenceOptionsPanel.PerformLayout();
             this.advanceSettingsTabPage.ResumeLayout(false);
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
@@ -1338,7 +1338,7 @@ namespace NHibernateMappingGenerator
         private RadioButton pascalCasedRadioButton;
         private GroupBox groupBox8;
         private CheckBox partialClassesCheckBox;
-        private Panel pOracleOnlyOptions;
+        private Panel sequenceOptionsPanel;
         private Button cancelButton;
         private CheckBox wcfDataContractCheckBox;
         private ListBox tablesListBox;
