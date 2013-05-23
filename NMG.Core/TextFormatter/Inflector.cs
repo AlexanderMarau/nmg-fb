@@ -26,12 +26,14 @@ namespace NMG.Core.TextFormatter
         private static readonly List<InflectorRule> _plurals = new List<InflectorRule>();
         private static readonly List<InflectorRule> _singulars = new List<InflectorRule>();
         private static readonly List<string> _uncountables = new List<string>();
+        public static bool EnableInflection { get; set; }
 
         /// <summary>
         /// Initializes the <see cref="Inflector"/> class.
         /// </summary>
         static Inflector()
         {
+            if (!EnableInflection) return;
             AddPluralRule("$", "s");
             AddPluralRule("s$", "s");
             AddPluralRule("(ax|test)is$", "$1es");
@@ -249,8 +251,8 @@ namespace NMG.Core.TextFormatter
                     {
                         string word = words[i];
                         string restOfWord = word.Substring(1);
-                        if (restOfWord.IsUpperCase())
-                            restOfWord = restOfWord.ToLower(CultureInfo.CurrentUICulture);
+                        //if (restOfWord.IsUpperCase())
+                        //    restOfWord = restOfWord.ToLower(CultureInfo.CurrentUICulture);
                         char firstChar = char.ToUpper(word[0], CultureInfo.CurrentUICulture);
                         words[i] = String.Concat(firstChar, restOfWord);
                     }

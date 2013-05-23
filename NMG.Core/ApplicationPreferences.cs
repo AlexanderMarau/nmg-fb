@@ -47,6 +47,8 @@ namespace NMG.Core
         public string InheritenceAndInterfaces { get; set; }
 
         public string ClassNamePrefix { get; set; }
+        
+        public bool EnableInflections { get; set; }
 
         public Language Language { get; set; }
 
@@ -61,8 +63,12 @@ namespace NMG.Core
         public bool GenerateInFolders { get; set; }
         
         public bool UseLazy { get; set; }
-        
+
         public bool IncludeForeignKeys { get; set; }
+
+        public bool NameFkAsForeignTable { get; set; }
+
+        public bool IncludeHasMany { get; set; }
 
         public bool IncludeLengthAndScale { get; set; }
 
