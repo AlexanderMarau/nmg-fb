@@ -253,24 +253,16 @@ namespace NMG.Core.Generator
             {
                 foreach (var pk in Table.PrimaryKey.Columns)
                 {
-                    if (pk.IsForeignKey && appPrefs.IncludeForeignKeys)
-                    {
-                        newType.Members.Add(codeGenerationHelper.CreateAutoProperty(Formatter.FormatSingular(pk.ForeignKeyTableName),
-                                                                                    Formatter.FormatSingular(pk.ForeignKeyTableName),
-                                                                                    appPrefs.UseLazy));
-                    } 
-                    else
-                    {
-                        var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
-                                                             pk.DataPrecision, pk.DataScale);
-                        var fieldName = FixPropertyWithSameClassName(pk.Name, Table.Name);
-                        var pkAlsoFkQty = (from fk in Table.ForeignKeys.Where(fk => fk.UniquePropertyName == pk.Name) select fk).Count();
-                        if (pkAlsoFkQty > 0)
-                            fieldName = fieldName + "Id";
-                        newType.Members.Add(codeGenerationHelper.CreateAutoProperty(mapFromDbType.ToString(),
+                    var pkAlsoFkQty = (from fk in Table.Columns.Where(c => c.IsForeignKey && c.Name == pk.Name) select fk).Any();
+
+                    
+                    var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
+                                                            pk.DataPrecision, pk.DataScale);
+                    var fieldName = FixPropertyWithSameClassName(pk.Name, Table.Name);
+                    if (!pkAlsoFkQty) 
+                    newType.Members.Add(codeGenerationHelper.CreateAutoProperty(mapFromDbType.ToString(),
                                                                                 Formatter.FormatText(fieldName),
                                                                                 appPrefs.UseLazy));
-                    }
                 }
             }
 
