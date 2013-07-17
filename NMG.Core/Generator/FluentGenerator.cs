@@ -135,10 +135,10 @@ namespace NMG.Core.Generator
             var fieldName = FixPropertyWithSameClassName(propertyName, table.Name);
             var pkAlsoFkQty = (from fk in table.ForeignKeys.Where(fk => fk.UniquePropertyName == pkColumnName) select fk).Count();
             //if (pkAlsoFkQty > 0) fieldName = fieldName + "Id";
-             return new CodeSnippetStatement(string.Format(TABS + "Id(x => x.{0}).{1}.Column(\"{2}\");",
+            return new CodeSnippetStatement(string.Format(TABS + "Id(x => x.{0}).Column(\"{1}\").{2};",
                                                        formatter.FormatText(fieldName),
-                                                       idGeneratorType,
-                                                       pkColumnName));
+                                                       pkColumnName,
+                                                       idGeneratorType));
         }
 
         private static CodeSnippetStatement GetIdMapCodeSnippetStatement(PrimaryKey primaryKey, Table table, ITextFormatter formatter)
