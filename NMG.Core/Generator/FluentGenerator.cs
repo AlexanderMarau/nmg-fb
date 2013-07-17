@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -65,21 +66,34 @@ namespace NMG.Core.Generator
             }
 
             // Many To One Mapping
+            var previousFields = new HashSet<string>();
             foreach (var fk in Table.ForeignKeys.Where(fk => fk.Columns.First().IsForeignKey && appPrefs.IncludeForeignKeys))
             {
                 var propertyName = appPrefs.NameFkAsForeignTable ? fk.UniquePropertyName : fk.Columns.First().Name;
                 string name = propertyName;
                 propertyName = Formatter.FormatSingular(propertyName);
                 var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
-                var pkAlsoFkQty = (from fks in Table.ForeignKeys.Where(fks => fks.UniquePropertyName == name) select fks).Count();
-                if (pkAlsoFkQty > 1)
+                //var pkAlsoFkQty = (from fks in Table.ForeignKeys.Where(fks => fks.UniquePropertyName == name) select fks).Count();
+                //
+                //if (pkAlsoFkQty > 1)
+                //{
+                //    constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Column(\"{1}\").ForeignKey(\"{2}\");", fieldName, fk.Columns.First().Name, fk.Columns.First().ConstraintName)));                        
+                //}
+                //else
+                //{
+                if (fk.Columns.Count == 1)
                 {
-                    constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Column(\"{1}\").ForeignKey(\"{2}\");", fieldName, fk.Columns.First().Name, fk.Columns.First().ConstraintName)));
+                    if (previousFields.Add(fieldName))
+                        constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Column(\"{1}\");", fieldName, fk.Columns.First().Name)));
+                    
                 }
                 else
                 {
-                    constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Column(\"{1}\");", fieldName, fk.Columns.First().Name)));
+                    if (previousFields.Add(fieldName))
+                        constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Columns(\"{1}\");", fieldName, string.Join(", ", fk.Columns.Select(x => x.Name).ToArray()))));                    
                 }
+                //}
+
                 
             }
 
