@@ -134,8 +134,7 @@ namespace NMG.Core.Generator
                     var propertyName = Formatter.FormatText(pk.Name);
                     var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
                     var pkAlsoFkQty = (from fk in Table.ForeignKeys.Where(fk => fk.UniquePropertyName == pk.Name) select fk).Count();
-                    if (pkAlsoFkQty > 0)
-                        fieldName = fieldName + "Id";
+                    //if (pkAlsoFkQty > 0) fieldName = fieldName + "Id";
                     newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, fieldName, true));
                 }
             }
@@ -184,8 +183,7 @@ namespace NMG.Core.Generator
 
                         var pkAlsoFkQty = (from fk in Table.ForeignKeys.Where(fk => fk.UniquePropertyName == pk.Name) select fk).Count();
                         var fieldName = FixPropertyWithSameClassName(pk.Name, Table.Name);
-                        if (pkAlsoFkQty > 0)
-                            fieldName = fieldName + "Id";
+                        // if (pkAlsoFkQty > 0) fieldName = fieldName + "Id";
                         newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, "_" + camelCaseFormatter.FormatText(fieldName),
                                                                              true));
                         newType.Members.Add(codeGenerationHelper.CreateProperty(mapFromDbType, Formatter.FormatText(fieldName), appPrefs.UseLazy));
