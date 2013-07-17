@@ -105,6 +105,7 @@ namespace NHibernateMappingGenerator
             this.textBoxClassNamePrefix = new System.Windows.Forms.TextBox();
             this.textBoxInheritence = new System.Windows.Forms.TextBox();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.nameAsForeignTableCheckBox = new System.Windows.Forms.CheckBox();
             this.includeHasManyCheckBox = new System.Windows.Forms.CheckBox();
             this.includeLengthAndScaleCheckBox = new System.Windows.Forms.CheckBox();
             this.autoPropertyRadioBtn = new System.Windows.Forms.RadioButton();
@@ -125,6 +126,7 @@ namespace NHibernateMappingGenerator
             this.vbRadioButton = new System.Windows.Forms.RadioButton();
             this.cSharpRadioButton = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.EnableInflectionsCheckBox = new System.Windows.Forms.CheckBox();
             this.pascalCasedRadioButton = new System.Windows.Forms.RadioButton();
             this.prefixTextBox = new System.Windows.Forms.TextBox();
             this.prefixRadioButton = new System.Windows.Forms.RadioButton();
@@ -134,8 +136,8 @@ namespace NHibernateMappingGenerator
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
-            this.EnableInflectionsCheckBox = new System.Windows.Forms.CheckBox();
-            this.nameAsForeignTableCheckBox = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dbTableDetailsGridView)).BeginInit();
             this.mainTabControl.SuspendLayout();
             this.basicSettingsTabPage.SuspendLayout();
@@ -510,7 +512,6 @@ namespace NHibernateMappingGenerator
             this.mapCodeFastColoredTextBox.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.mapCodeFastColoredTextBox.DisabledColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))));
             this.mapCodeFastColoredTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapCodeFastColoredTextBox.Font = new System.Drawing.Font("Courier New", 9.75F);
             this.mapCodeFastColoredTextBox.IsReplaceMode = false;
             this.mapCodeFastColoredTextBox.Location = new System.Drawing.Point(3, 3);
             this.mapCodeFastColoredTextBox.Name = "mapCodeFastColoredTextBox";
@@ -537,7 +538,6 @@ namespace NHibernateMappingGenerator
             this.domainCodeFastColoredTextBox.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.domainCodeFastColoredTextBox.DisabledColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))));
             this.domainCodeFastColoredTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.domainCodeFastColoredTextBox.Font = new System.Drawing.Font("Courier New", 9.75F);
             this.domainCodeFastColoredTextBox.IsReplaceMode = false;
             this.domainCodeFastColoredTextBox.Location = new System.Drawing.Point(3, 3);
             this.domainCodeFastColoredTextBox.Name = "domainCodeFastColoredTextBox";
@@ -717,6 +717,7 @@ namespace NHibernateMappingGenerator
             // 
             // groupBox10
             // 
+            this.groupBox10.Controls.Add(this.label10);
             this.groupBox10.Controls.Add(this.removeFieldPrefixButton);
             this.groupBox10.Controls.Add(this.addFieldPrefixButton);
             this.groupBox10.Controls.Add(this.fieldPrefixListBox);
@@ -724,7 +725,7 @@ namespace NHibernateMappingGenerator
             this.groupBox10.Controls.Add(this.fieldPrefixTextBox);
             this.groupBox10.Location = new System.Drawing.Point(527, 152);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(309, 222);
+            this.groupBox10.Size = new System.Drawing.Size(309, 251);
             this.groupBox10.TabIndex = 8;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Table and Field Formatting";
@@ -754,7 +755,7 @@ namespace NHibernateMappingGenerator
             this.fieldPrefixListBox.FormattingEnabled = true;
             this.fieldPrefixListBox.Location = new System.Drawing.Point(19, 70);
             this.fieldPrefixListBox.Name = "fieldPrefixListBox";
-            this.fieldPrefixListBox.Size = new System.Drawing.Size(210, 134);
+            this.fieldPrefixListBox.Size = new System.Drawing.Size(210, 108);
             this.fieldPrefixListBox.TabIndex = 6;
             this.fieldPrefixListBox.SelectedIndexChanged += new System.EventHandler(this.OnFieldPrefixListBoxSelectedIndexChanged);
             // 
@@ -789,9 +790,10 @@ namespace NHibernateMappingGenerator
             this.generateInFoldersCheckBox.AutoSize = true;
             this.generateInFoldersCheckBox.Location = new System.Drawing.Point(12, 14);
             this.generateInFoldersCheckBox.Name = "generateInFoldersCheckBox";
-            this.generateInFoldersCheckBox.Size = new System.Drawing.Size(172, 17);
+            this.generateInFoldersCheckBox.Size = new System.Drawing.Size(275, 17);
             this.generateInFoldersCheckBox.TabIndex = 0;
-            this.generateInFoldersCheckBox.Text = "Group generated files in folders";
+            this.generateInFoldersCheckBox.Text = "Group generated files in folders (Domain vs Mapping)";
+            this.toolTip1.SetToolTip(this.generateInFoldersCheckBox, "Depends on how you feel more confortable and convenient");
             this.generateInFoldersCheckBox.UseVisualStyleBackColor = true;
             // 
             // groupBox8
@@ -851,6 +853,8 @@ namespace NHibernateMappingGenerator
             this.partialClassesCheckBox.Size = new System.Drawing.Size(141, 17);
             this.partialClassesCheckBox.TabIndex = 0;
             this.partialClassesCheckBox.Text = "Generate Partial Classes";
+            this.toolTip1.SetToolTip(this.partialClassesCheckBox, "Useful when you need to add functionality to generated classes externally without" +
+        " need modify the generated files");
             this.partialClassesCheckBox.UseVisualStyleBackColor = true;
             // 
             // labelCLassNamePrefix
@@ -902,6 +906,17 @@ namespace NHibernateMappingGenerator
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Field Or Property";
             // 
+            // nameAsForeignTableCheckBox
+            // 
+            this.nameAsForeignTableCheckBox.AutoSize = true;
+            this.nameAsForeignTableCheckBox.Location = new System.Drawing.Point(29, 134);
+            this.nameAsForeignTableCheckBox.Name = "nameAsForeignTableCheckBox";
+            this.nameAsForeignTableCheckBox.Size = new System.Drawing.Size(136, 17);
+            this.nameAsForeignTableCheckBox.TabIndex = 11;
+            this.nameAsForeignTableCheckBox.Text = "Name as Foreign Table";
+            this.toolTip1.SetToolTip(this.nameAsForeignTableCheckBox, "When enable can be a conflict when Multiple Fk to diferent tables on same Column.");
+            this.nameAsForeignTableCheckBox.UseVisualStyleBackColor = true;
+            // 
             // includeHasManyCheckBox
             // 
             this.includeHasManyCheckBox.AutoSize = true;
@@ -920,6 +935,8 @@ namespace NHibernateMappingGenerator
             this.includeLengthAndScaleCheckBox.Size = new System.Drawing.Size(148, 17);
             this.includeLengthAndScaleCheckBox.TabIndex = 9;
             this.includeLengthAndScaleCheckBox.Text = "Include Length and Scale";
+            this.toolTip1.SetToolTip(this.includeLengthAndScaleCheckBox, "Useful when you want to re-create the schema/tables using your model/mapping, or " +
+        "do validation also using mapping information.");
             this.includeLengthAndScaleCheckBox.UseVisualStyleBackColor = true;
             // 
             // autoPropertyRadioBtn
@@ -930,6 +947,8 @@ namespace NHibernateMappingGenerator
             this.autoPropertyRadioBtn.Size = new System.Drawing.Size(89, 17);
             this.autoPropertyRadioBtn.TabIndex = 6;
             this.autoPropertyRadioBtn.Text = "Auto Property";
+            this.toolTip1.SetToolTip(this.autoPropertyRadioBtn, "Recomended for cleaner code, each field wil result on just \"public Type PropertyN" +
+        "ame {get;set}\"");
             this.autoPropertyRadioBtn.UseVisualStyleBackColor = true;
             // 
             // propertyRadioBtn
@@ -962,6 +981,7 @@ namespace NHibernateMappingGenerator
             this.useLazyLoadingCheckBox.Size = new System.Drawing.Size(111, 17);
             this.useLazyLoadingCheckBox.TabIndex = 7;
             this.useLazyLoadingCheckBox.Text = "Use Lazy Loading";
+            this.toolTip1.SetToolTip(this.useLazyLoadingCheckBox, "Will add LazyLoad on mapping and Virtual keyword to properties in Fluent Mapping");
             this.useLazyLoadingCheckBox.UseVisualStyleBackColor = true;
             // 
             // includeForeignKeysCheckBox
@@ -1048,9 +1068,9 @@ namespace NHibernateMappingGenerator
             this.fluentMappingOption.AutoSize = true;
             this.fluentMappingOption.Location = new System.Drawing.Point(6, 42);
             this.fluentMappingOption.Name = "fluentMappingOption";
-            this.fluentMappingOption.Size = new System.Drawing.Size(98, 17);
+            this.fluentMappingOption.Size = new System.Drawing.Size(190, 17);
             this.fluentMappingOption.TabIndex = 5;
-            this.fluentMappingOption.Text = "Fluent Mapping";
+            this.fluentMappingOption.Text = "Fluent Mapping (FluentNHibernate)";
             this.fluentMappingOption.UseVisualStyleBackColor = true;
             // 
             // hbmMappingOption
@@ -1125,14 +1145,26 @@ namespace NHibernateMappingGenerator
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Generated Property Name";
             // 
+            // EnableInflectionsCheckBox
+            // 
+            this.EnableInflectionsCheckBox.AutoSize = true;
+            this.EnableInflectionsCheckBox.Location = new System.Drawing.Point(6, 111);
+            this.EnableInflectionsCheckBox.Name = "EnableInflectionsCheckBox";
+            this.EnableInflectionsCheckBox.Size = new System.Drawing.Size(287, 17);
+            this.EnableInflectionsCheckBox.TabIndex = 22;
+            this.EnableInflectionsCheckBox.Text = "Load Inflections to Singularize or Pruralize (English only)";
+            this.toolTip1.SetToolTip(this.EnableInflectionsCheckBox, "Currently Works only in English");
+            this.EnableInflectionsCheckBox.UseVisualStyleBackColor = true;
+            // 
             // pascalCasedRadioButton
             // 
             this.pascalCasedRadioButton.AutoSize = true;
             this.pascalCasedRadioButton.Location = new System.Drawing.Point(6, 65);
             this.pascalCasedRadioButton.Name = "pascalCasedRadioButton";
-            this.pascalCasedRadioButton.Size = new System.Drawing.Size(219, 17);
+            this.pascalCasedRadioButton.Size = new System.Drawing.Size(297, 17);
             this.pascalCasedRadioButton.TabIndex = 4;
-            this.pascalCasedRadioButton.Text = "Pascal Case (e.g. ThisIsMyColumnName)";
+            this.pascalCasedRadioButton.Text = "Pascal Case (e.g. ThisIsMyColumnName, Recommended)";
+            this.toolTip1.SetToolTip(this.pascalCasedRadioButton, "Pascal Case is recomended to follow .Net Code Conventions");
             this.pascalCasedRadioButton.UseVisualStyleBackColor = true;
             // 
             // prefixTextBox
@@ -1215,25 +1247,13 @@ namespace NHibernateMappingGenerator
             this.toolStripProgressBar1.Name = "toolStripProgressBar1";
             this.toolStripProgressBar1.Size = new System.Drawing.Size(300, 16);
             // 
-            // EnableInflectionsCheckBox
+            // label10
             // 
-            this.EnableInflectionsCheckBox.AutoSize = true;
-            this.EnableInflectionsCheckBox.Location = new System.Drawing.Point(6, 111);
-            this.EnableInflectionsCheckBox.Name = "EnableInflectionsCheckBox";
-            this.EnableInflectionsCheckBox.Size = new System.Drawing.Size(222, 17);
-            this.EnableInflectionsCheckBox.TabIndex = 22;
-            this.EnableInflectionsCheckBox.Text = "Load Inflections to Singularize or Pruralize";
-            this.EnableInflectionsCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // nameAsForeignTableCheckBox
-            // 
-            this.nameAsForeignTableCheckBox.AutoSize = true;
-            this.nameAsForeignTableCheckBox.Location = new System.Drawing.Point(29, 134);
-            this.nameAsForeignTableCheckBox.Name = "nameAsForeignTableCheckBox";
-            this.nameAsForeignTableCheckBox.Size = new System.Drawing.Size(136, 17);
-            this.nameAsForeignTableCheckBox.TabIndex = 11;
-            this.nameAsForeignTableCheckBox.Text = "Name as Foreign Table";
-            this.nameAsForeignTableCheckBox.UseVisualStyleBackColor = true;
+            this.label10.Location = new System.Drawing.Point(6, 186);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(303, 52);
+            this.label10.TabIndex = 8;
+            this.label10.Text = resources.GetString("label10.Text");
             // 
             // App
             // 
@@ -1396,6 +1416,8 @@ namespace NHibernateMappingGenerator
         private CheckBox includeHasManyCheckBox;
         private CheckBox EnableInflectionsCheckBox;
         private CheckBox nameAsForeignTableCheckBox;
+        private Label label10;
+        private ToolTip toolTip1;
     }
 }
 

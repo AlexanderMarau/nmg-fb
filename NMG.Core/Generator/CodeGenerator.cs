@@ -278,15 +278,15 @@ namespace NMG.Core.Generator
             {
                 var pascalCaseTextFormatter = new PascalCaseTextFormatter { PrefixRemovalList = appPrefs.FieldPrefixRemovalList };
                 // Note that a foreign key referencing a primary within the same table will end up giving you a foreign key property with the same name as the table.
-                string lastOne = null;
+                var previousFields = new HashSet<string>();
                 foreach (var fk in Table.Columns.Where(c => c.IsForeignKey && !c.IsPrimaryKey))
                 {
                     var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.ForeignKeyTableName);
-                    var propertyName = Formatter.FormatSingular(fk.ForeignKeyTableName);
+                    var fName = applicationPreferences.NameFkAsForeignTable ? fk.ForeignKeyTableName : fk.Name;
+                    var propertyName = Formatter.FormatSingular(fName);
                     var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
-                    if (lastOne != fieldName)
+                    if (previousFields.Add(fieldName))
                         newType.Members.Add(codeGenerationHelper.CreateAutoProperty(typeName, fieldName, appPrefs.UseLazy));
-                    lastOne = fieldName;
                 }
             }
 
@@ -458,7 +458,7 @@ namespace NMG.Core.Generator
             entireContent = FixNullableTypes(entireContent);
             //Fix Attrubutes with blank parenthesis
             entireContent = entireContent.Replace("()]", "]");
-
+            entireContent = entireContent.Replace("\r\n", "\n").Replace("\n\n\n", "\n\n").Replace("\n\t\n\t", "\n\t");
             return entireContent;
         }
         // Hack : Auto property generator is not there in CodeDom.

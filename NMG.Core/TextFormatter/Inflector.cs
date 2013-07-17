@@ -262,6 +262,7 @@ namespace NMG.Core.TextFormatter
         {
             if (String.IsNullOrEmpty(text))
                 return text;
+            text = AddUnderscores(text); //Conserve the actually PascalCased/CamelCased Table names
             text = text.Replace("_", " ");
             string joinString = removeUnderscores ? String.Empty : "_";
             string[] words = text.Split(' ');
@@ -271,7 +272,10 @@ namespace NMG.Core.TextFormatter
                 {
                     words[i] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(words[i].ToLowerInvariant());
                 }
-                return String.Join(joinString, words);
+                text = String.Join(joinString, words); //Join the Title Cased Words
+                //Tidy: Uncomment below line to had TablenamexMap (last char in lowercase before "Map") instead of TablenameXMap when you had a "Tablename X" or "Tablename_X" or "TablenameX"
+                //text = text.Substring(0, text.Length - 1) + text.Substring(text.Length - 1, 1).ToLowerInvariant(); //Do not disturb with the Map termination when FluentMapping
+                return text;
             }
             return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(words[0].ToLowerInvariant());
         }

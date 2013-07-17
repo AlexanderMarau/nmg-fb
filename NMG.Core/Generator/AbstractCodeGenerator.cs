@@ -48,6 +48,7 @@ namespace NMG.Core.Generator
         {
             entireContent = RemoveComments(entireContent);
             entireContent = AddStandardHeader(entireContent);
+            entireContent = entireContent.Replace("\r\n", "\n").Replace("\n\n\n", "\n\n").Replace("\n    \n    ", "\n    ");
             return FixAutoProperties(entireContent);
         }
 
