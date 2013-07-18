@@ -90,7 +90,7 @@ namespace NMG.Core.Generator
                 else
                 {
                     if (previousFields.Add(fieldName))
-                        constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Columns(\"{1}\");", fieldName, string.Join(", ", fk.Columns.Select(x => x.Name).ToArray()))));                    
+                        constructor.Statements.Add(new CodeSnippetStatement(string.Format(TABS + "References(x => x.{0}).Columns(\"{1}\");", fieldName, string.Join("\", \"", fk.Columns.Select(x => x.Name).ToArray()))));                    
                 }
                 //}
 
