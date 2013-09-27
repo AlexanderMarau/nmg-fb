@@ -4,10 +4,12 @@ namespace NMG.Core.Domain
     {
         Oracle,
         SqlServer,
-        PostgreSQL, 
+        PostgreSQL,
         MySQL,
         SQLite,
         Sybase,
         Firebird
+        Ingres,
+        CUBRID
     }
 }
