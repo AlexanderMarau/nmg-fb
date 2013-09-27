@@ -8,7 +8,7 @@ namespace NMG.Core.Domain
         MySQL,
         SQLite,
         Sybase,
-        Firebird
+        Firebird,
         Ingres,
         CUBRID
     }
