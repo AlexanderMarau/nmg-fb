@@ -57,15 +57,12 @@ namespace NMG.Core
                     return MapFromPostgreDBType(dataType, dataLength, dataPrecision, dataScale);
                 case ServerType.Sybase:
                     return MapFromSqlServerDBType(dataType, dataLength, dataPrecision, dataScale);
-<<<<<<< HEAD
                 case ServerType.Firebird:
                     return MapFromFirebirdDBType(dataType, dataLength, dataPrecision, dataScale);
-=======
                 case ServerType.Ingres:
                     return MapFromIngresDbType(dataType, dataLength, dataPrecision, dataScale);
                 case ServerType.CUBRID:
                     return MapFromCUBRIDDBType(dataType, dataLength, dataPrecision, dataScale);
->>>>>>> 45ce68a2630d8b345c9485333d07303a649e8ea3
             }
             return MapFromDBType(dataType, dataLength, dataPrecision, dataScale);
         }
