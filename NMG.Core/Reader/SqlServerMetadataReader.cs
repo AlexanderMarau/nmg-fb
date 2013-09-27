@@ -51,7 +51,7 @@ from information_schema.columns c
 						where c.table_name = '{0}'
 							  and c.table_schema ='{1}'
 						order by c.table_name, c.ordinal_position",
-							table.Name, owner);
+							table.Name.Replace("'", "''"), owner);
 
 						using (var sqlDataReader = tableDetailsCommand.ExecuteReader(CommandBehavior.Default)) {
 							while (sqlDataReader.Read()) {
@@ -144,7 +144,7 @@ from information_schema.columns c
 			try {
 				using (conn) {
 					var tableCommand = conn.CreateCommand();
-					tableCommand.CommandText = String.Format("select table_name from information_schema.tables where table_type in ('BASE TABLE','VIEW') AND TABLE_SCHEMA = '{0}'", owner);
+					tableCommand.CommandText = String.Format("select table_name from information_schema.tables where table_type in ('BASE TABLE') AND TABLE_SCHEMA = '{0}'", owner);
 					var sqlDataReader = tableCommand.ExecuteReader(CommandBehavior.CloseConnection);
 					while (sqlDataReader.Read()) {
 						var tableName = sqlDataReader.GetString(0);
@@ -302,7 +302,7 @@ WHERE KCU1.CONSTRAINT_NAME = '{0}'",
 						  JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE d on a.CONSTRAINT_NAME = d.CONSTRAINT_NAME
 						WHERE b.TABLE_NAME = '{0}'
 						ORDER BY 1,2",
-								table.Name);
+								table.Name.Replace("'","''"));
 						SqlDataReader reader = command.ExecuteReader();
 
 						while (reader.Read()) {

@@ -163,11 +163,14 @@ namespace NHibernateMappingGenerator
                 textBoxInheritence.Text = applicationSettings.InheritenceAndInterfaces;
                 comboBoxForeignCollection.Text = applicationSettings.ForeignEntityCollectionType;
                 textBoxClassNamePrefix.Text = applicationSettings.ClassNamePrefix;
+                EnableInflectionsCheckBox.Checked = applicationSettings.EnableInflections;
                 wcfDataContractCheckBox.Checked = applicationSettings.GenerateWcfContracts;
                 partialClassesCheckBox.Checked = applicationSettings.GeneratePartialClasses;
                 useLazyLoadingCheckBox.Checked = applicationSettings.UseLazy;
                 includeLengthAndScaleCheckBox.Checked = applicationSettings.IncludeLengthAndScale;
                 includeForeignKeysCheckBox.Checked = applicationSettings.IncludeForeignKeys;
+                nameAsForeignTableCheckBox.Checked = applicationSettings.NameFkAsForeignTable;
+                includeHasManyCheckBox.Checked = applicationSettings.IncludeHasMany;
 
                 fluentMappingOption.Checked = applicationSettings.IsFluent;
                 castleMappingOption.Checked = applicationSettings.IsCastle;
@@ -200,6 +203,8 @@ namespace NHibernateMappingGenerator
                 cSharpRadioButton.Checked = true;
                 byCodeMappingOption.Checked = true;
                 includeForeignKeysCheckBox.Checked = true;
+                nameAsForeignTableCheckBox.Checked = true;
+                includeHasManyCheckBox.Checked = false;
                 useLazyLoadingCheckBox.Checked = true;
 
                 comboBoxForeignCollection.Text = "IList";
@@ -316,12 +321,15 @@ namespace NHibernateMappingGenerator
             applicationSettings.Prefix = prefixTextBox.Text;
             applicationSettings.IsCastle = IsCastle;
             applicationSettings.ClassNamePrefix = textBoxClassNamePrefix.Text;
+            applicationSettings.EnableInflections = EnableInflectionsCheckBox.Checked;
             applicationSettings.GeneratePartialClasses = partialClassesCheckBox.Checked;
             applicationSettings.GenerateWcfContracts = wcfDataContractCheckBox.Checked;
             applicationSettings.GenerateInFolders = generateInFoldersCheckBox.Checked;
             applicationSettings.IsByCode = IsByCode;
             applicationSettings.UseLazy = useLazyLoadingCheckBox.Checked;
             applicationSettings.IncludeForeignKeys = includeForeignKeysCheckBox.Checked;
+            applicationSettings.NameFkAsForeignTable = nameAsForeignTableCheckBox.Checked;
+            applicationSettings.IncludeHasMany = includeHasManyCheckBox.Checked;
             applicationSettings.IncludeLengthAndScale = includeLengthAndScaleCheckBox.Checked;
             applicationSettings.LastUsedConnection = _currentConnection == null ? (Guid?) null : _currentConnection.Id;
         }
@@ -621,7 +629,9 @@ namespace NHibernateMappingGenerator
         {
             var appSettings = e.Argument as ApplicationSettings; 
             var items = tablesListBox.Items;
-            Parallel.ForEach(items.Cast<Table>(), (table, loopState) =>
+            var pOptions = new ParallelOptions();
+            pOptions.MaxDegreeOfParallelism = Environment.ProcessorCount;
+            Parallel.ForEach(items.Cast<Table>(), pOptions, (table, loopState) =>
             {
                 if (worker != null && worker.CancellationPending && !loopState.IsStopped)
                 {
@@ -719,10 +729,13 @@ namespace NHibernateMappingGenerator
                                                  InheritenceAndInterfaces = appSettings.InheritenceAndInterfaces,
                                                  GenerateInFolders = appSettings.GenerateInFolders,
                                                  ClassNamePrefix = appSettings.ClassNamePrefix,
+                                                 EnableInflections = appSettings.EnableInflections,
                                                  IsByCode = appSettings.IsByCode,
                                                  UseLazy = appSettings.UseLazy,
                                                  FieldPrefixRemovalList = appSettings.FieldPrefixRemovalList,
                                                  IncludeForeignKeys = appSettings.IncludeForeignKeys,
+                                                 NameFkAsForeignTable = appSettings.NameFkAsForeignTable,
+                                                 IncludeHasMany = appSettings.IncludeHasMany,
                                                  IncludeLengthAndScale = appSettings.IncludeLengthAndScale,
                                                  ValidatorStyle = appSettings.ValidationStyle
                                              };
@@ -862,6 +875,11 @@ namespace NHibernateMappingGenerator
             applicationController.Generate(writeToFile: false);
             mapCodeFastColoredTextBox.Text = applicationController.GeneratedMapCode;
             domainCodeFastColoredTextBox.Text = applicationController.GeneratedDomainCode;
+        }
+
+        private void includeForeignKeysCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            nameAsForeignTableCheckBox.Enabled = includeForeignKeysCheckBox.Checked;
         }
 
     }

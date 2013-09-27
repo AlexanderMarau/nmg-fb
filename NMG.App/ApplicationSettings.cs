@@ -44,6 +44,8 @@ namespace NHibernateMappingGenerator
 
         public string ClassNamePrefix { get; set; }
 
+        public bool EnableInflections { get; set; }
+
         public bool GenerateWcfContracts { get; set; }
 
         public bool GeneratePartialClasses { get; set; }
@@ -63,6 +65,10 @@ namespace NHibernateMappingGenerator
         public bool UseLazy { get; set; }
 
         public bool IncludeForeignKeys { get; set; }
+
+        public bool NameFkAsForeignTable { get; set; }
+
+        public bool IncludeHasMany { get; set; }
 
         public bool IncludeLengthAndScale { get; set; }
 

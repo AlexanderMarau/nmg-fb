@@ -22,6 +22,7 @@ namespace NMG.Core.Generator
         {
             this.appPrefs = appPrefs;
             language = appPrefs.Language;
+            Inflector.EnableInflection = appPrefs.EnableInflections;
         }
 
         public override void Generate(bool writeToFile = true)
@@ -34,8 +35,7 @@ namespace NMG.Core.Generator
             if (writeToFile)
             {
                 WriteToFile(compileUnit, className);
-            }
-            else
+            } else
             {
                 // Output to property
                 GeneratedCode = WriteToString(compileUnit);
@@ -57,7 +57,18 @@ namespace NMG.Core.Generator
             // Generate GetHashCode() and Equals() methods.
             if (Table.PrimaryKey != null && Table.PrimaryKey.Columns.Count != 0 && Table.PrimaryKey.Type == PrimaryKeyType.CompositeKey)
             {
-                var pkColsList = Table.PrimaryKey.Columns.Select(s => Formatter.FormatText(s.Name)).ToList();
+                List<string> pkColsList = new List<string>();
+                foreach (var pkCol in Table.PrimaryKey.Columns)
+                {
+                    if (pkCol.IsForeignKey && appPrefs.IncludeForeignKeys)
+                    {
+                        pkColsList.Add(Formatter.FormatSingular(pkCol.ForeignKeyTableName) + "." + Formatter.FormatText(pkCol.ForeignKeyColumnName));
+                    }
+                    else
+                    {
+                        pkColsList.Add(Formatter.FormatText(pkCol.Name));
+                    }
+                }
 
                 var equalsCode = CreateCompositeKeyEqualsMethod(pkColsList);
                 var getHashKeyCode = CreateCompositeKeyGetHashKeyMethod(pkColsList);
@@ -74,20 +85,20 @@ namespace NMG.Core.Generator
 
             var pascalCaseTextFormatter = new PascalCaseTextFormatter { PrefixRemovalList = appPrefs.FieldPrefixRemovalList };
             var constructorStatements = new CodeStatementCollection();
-            foreach (var hasMany in Table.HasManyRelationships)
-            {
+            if (appPrefs.IncludeHasMany)
+                foreach (var hasMany in Table.HasManyRelationships)
+                {
                 
-                if (appPrefs.Language == Language.CSharp)
-                {
-                    newType.Members.Add(codeGenerationHelper.CreateAutoProperty(string.Format("{0}<{1}{2}>", appPrefs.ForeignEntityCollectionType, appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference)), Formatter.FormatPlural(hasMany.Reference), appPrefs.UseLazy));
-                    constructorStatements.Add(new CodeSnippetStatement(string.Format(TABS + "{0} = new {1}<{2}{3}>();", Formatter.FormatPlural(hasMany.Reference), codeGenerationHelper.InstatiationObject(appPrefs.ForeignEntityCollectionType), appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference))));
+                    if (appPrefs.Language == Language.CSharp)
+                    {
+                        newType.Members.Add(codeGenerationHelper.CreateAutoProperty(string.Format("{0}<{1}{2}>", appPrefs.ForeignEntityCollectionType, appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference)), Formatter.FormatPlural(hasMany.Reference), appPrefs.UseLazy));
+                        constructorStatements.Add(new CodeSnippetStatement(string.Format(TABS + "{0} = new {1}<{2}{3}>();", Formatter.FormatPlural(hasMany.Reference), codeGenerationHelper.InstatiationObject(appPrefs.ForeignEntityCollectionType), appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference))));
+                    } else if (appPrefs.Language == Language.VB)
+                    {
+                        newType.Members.Add(codeGenerationHelper.CreateAutoProperty(string.Format("{0}(Of {1}{2})", appPrefs.ForeignEntityCollectionType, appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference)), Formatter.FormatPlural(hasMany.Reference), appPrefs.UseLazy));
+                        constructorStatements.Add(new CodeSnippetStatement(string.Format(TABS + "{0} = New {1}(Of {2}{3})()", Formatter.FormatPlural(hasMany.Reference), codeGenerationHelper.InstatiationObject(appPrefs.ForeignEntityCollectionType), appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference))));
+                    }
                 }
-                else if (appPrefs.Language == Language.VB)
-                {
-                    newType.Members.Add(codeGenerationHelper.CreateAutoProperty(string.Format("{0}(Of {1}{2})", appPrefs.ForeignEntityCollectionType, appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference)), Formatter.FormatPlural(hasMany.Reference), appPrefs.UseLazy));
-                    constructorStatements.Add(new CodeSnippetStatement(string.Format(TABS + "{0} = New {1}(Of {2}{3})()", Formatter.FormatPlural(hasMany.Reference), codeGenerationHelper.InstatiationObject(appPrefs.ForeignEntityCollectionType), appPrefs.ClassNamePrefix, pascalCaseTextFormatter.FormatSingular(hasMany.Reference))));
-                }
-            }
 
             var constructor = new CodeConstructor { Attributes = MemberAttributes.Public };
             constructor.Statements.AddRange(constructorStatements);
@@ -120,8 +131,11 @@ namespace NMG.Core.Generator
                 {
                     var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
                                                              pk.DataPrecision, pk.DataScale);
-                    newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, Formatter.FormatText(pk.Name),
-                                                                         true));
+                    var propertyName = Formatter.FormatText(pk.Name);
+                    var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
+                    var pkAlsoFkQty = (from fk in Table.ForeignKeys.Where(fk => fk.UniquePropertyName == pk.Name) select fk).Count();
+                    //if (pkAlsoFkQty > 0) fieldName = fieldName + "Id";
+                    newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, fieldName, true));
                 }
             }
 
@@ -132,7 +146,9 @@ namespace NMG.Core.Generator
                 // Note that a foreign key referencing a primary within the same table will end up giving you a foreign key property with the same name as the table.
                 foreach (var fk in Table.ForeignKeys.Where(fk => !string.IsNullOrEmpty(fk.References)))
                 {
-                    var fieldName = Formatter.FormatSingular(fk.UniquePropertyName);
+                    var propertyName = fk.UniquePropertyName;
+                    propertyName = Formatter.FormatSingular(propertyName);
+                    var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
                     var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.References);
                     newType.Members.Add(codeGenerationHelper.CreateField(typeName, fieldName));
                 }
@@ -141,7 +157,8 @@ namespace NMG.Core.Generator
             foreach (var column in Table.Columns.Where(x => !x.IsPrimaryKey && (!x.IsForeignKey || !appPrefs.IncludeForeignKeys)))
             {
                 var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, column.DataType, column.DataLength, column.DataPrecision, column.DataScale);
-                var fieldName = Formatter.FormatText(column.Name);
+                var propertyName = Formatter.FormatText(column.Name);
+                var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
                 newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, fieldName, column.IsNullable));
             }
         }
@@ -154,12 +171,23 @@ namespace NMG.Core.Generator
                 
                 foreach (var pk in Table.PrimaryKey.Columns)
                 {
-                    var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
-                                                             pk.DataPrecision, pk.DataScale);
-                    newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, "_" + camelCaseFormatter.FormatText(pk.Name),
-                                                                         true));
-                    newType.Members.Add(codeGenerationHelper.CreateProperty(mapFromDbType, Formatter.FormatText(pk.Name),
-                                                                            appPrefs.UseLazy));
+                    if (pk.IsForeignKey && appPrefs.IncludeForeignKeys)
+                    {
+                        newType.Members.Add(codeGenerationHelper.CreateField(Formatter.FormatSingular(pk.ForeignKeyTableName), "_" + camelCaseFormatter.FormatSingular(pk.ForeignKeyTableName)));
+                        newType.Members.Add(codeGenerationHelper.CreateProperty(Formatter.FormatSingular(pk.ForeignKeyTableName), Formatter.FormatSingular(pk.ForeignKeyTableName), appPrefs.UseLazy));
+                    } 
+                    else
+                    {
+                        var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
+                                                                 pk.DataPrecision, pk.DataScale);
+
+                        var pkAlsoFkQty = (from fk in Table.ForeignKeys.Where(fk => fk.UniquePropertyName == pk.Name) select fk).Count();
+                        var fieldName = FixPropertyWithSameClassName(pk.Name, Table.Name);
+                        // if (pkAlsoFkQty > 0) fieldName = fieldName + "Id";
+                        newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, "_" + camelCaseFormatter.FormatText(fieldName),
+                                                                             true));
+                        newType.Members.Add(codeGenerationHelper.CreateProperty(mapFromDbType, Formatter.FormatText(fieldName), appPrefs.UseLazy));
+                    }
                 }
             }
 
@@ -167,20 +195,24 @@ namespace NMG.Core.Generator
             {
                 var pascalCaseTextFormatter = new PascalCaseTextFormatter { PrefixRemovalList = appPrefs.FieldPrefixRemovalList };
                 // Note that a foreign key referencing a primary within the same table will end up giving you a foreign key property with the same name as the table.
-                foreach (var fk in Table.ForeignKeys.Where(fk => !string.IsNullOrEmpty(fk.References)))
+                foreach (var fk in Table.Columns.Where(c => c.IsForeignKey && !c.IsPrimaryKey))
                 {
-                    var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.References);
-                    newType.Members.Add(codeGenerationHelper.CreateField(typeName,string.Format("_{0}", camelCaseFormatter.FormatSingular(fk.UniquePropertyName))));
-                    newType.Members.Add(codeGenerationHelper.CreateProperty(typeName,Formatter.FormatSingular(fk.UniquePropertyName), appPrefs.UseLazy));
+                    var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.ForeignKeyTableName);
+                    var propertyName = fk.ForeignKeyTableName;
+                    var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
+
+                    newType.Members.Add(codeGenerationHelper.CreateField(typeName, string.Format("_{0}", camelCaseFormatter.FormatSingular(fieldName))));
+                    newType.Members.Add(codeGenerationHelper.CreateProperty(typeName, Formatter.FormatSingular(fieldName), appPrefs.UseLazy));
                 }
             }
 
             foreach (var column in Table.Columns.Where(x => !x.IsPrimaryKey && (!x.IsForeignKey || !appPrefs.IncludeForeignKeys)))
             {
                 var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, column.DataType, column.DataLength, column.DataPrecision, column.DataScale);
-                newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, "_" + camelCaseFormatter.FormatText(column.Name), column.IsNullable));
+                var fieldName = FixPropertyWithSameClassName(column.Name, Table.Name);
+                newType.Members.Add(codeGenerationHelper.CreateField(mapFromDbType, "_" + camelCaseFormatter.FormatText(fieldName), column.IsNullable));
 
-                var property = codeGenerationHelper.CreateProperty(mapFromDbType, Formatter.FormatText(column.Name), column.IsNullable, appPrefs.UseLazy);
+                var property = codeGenerationHelper.CreateProperty(mapFromDbType, Formatter.FormatText(fieldName), column.IsNullable, appPrefs.UseLazy);
                 AttachValidatorAttributes(ref property, column);
                 newType.Members.Add(property);
             }
@@ -219,10 +251,15 @@ namespace NMG.Core.Generator
             {
                 foreach (var pk in Table.PrimaryKey.Columns)
                 {
+                    var pkAlsoFkQty = (from fk in Table.Columns.Where(c => c.IsForeignKey && c.Name == pk.Name) select fk).Any();
+
+                    
                     var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, pk.DataType, pk.DataLength,
-                                                             pk.DataPrecision, pk.DataScale);
+                                                            pk.DataPrecision, pk.DataScale);
+                    var fieldName = FixPropertyWithSameClassName(pk.Name, Table.Name);
+                    if (!pkAlsoFkQty) 
                     newType.Members.Add(codeGenerationHelper.CreateAutoProperty(mapFromDbType.ToString(),
-                                                                                Formatter.FormatText(pk.Name),
+                                                                                Formatter.FormatText(fieldName),
                                                                                 appPrefs.UseLazy));
                 }
             }
@@ -231,10 +268,15 @@ namespace NMG.Core.Generator
             {
                 var pascalCaseTextFormatter = new PascalCaseTextFormatter { PrefixRemovalList = appPrefs.FieldPrefixRemovalList };
                 // Note that a foreign key referencing a primary within the same table will end up giving you a foreign key property with the same name as the table.
-                foreach (var fk in Table.ForeignKeys.Where(fk => !string.IsNullOrEmpty(fk.References)))
+                var previousFields = new HashSet<string>();
+                foreach (var fk in Table.Columns.Where(c => c.IsForeignKey && !c.IsPrimaryKey))
                 {
-                    var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.References);
-                    newType.Members.Add(codeGenerationHelper.CreateAutoProperty(typeName, Formatter.FormatSingular(fk.UniquePropertyName), appPrefs.UseLazy));
+                    var typeName = appPrefs.ClassNamePrefix + pascalCaseTextFormatter.FormatSingular(fk.ForeignKeyTableName);
+                    var fName = applicationPreferences.NameFkAsForeignTable ? fk.ForeignKeyTableName : fk.Name;
+                    var propertyName = Formatter.FormatSingular(fName);
+                    var fieldName = FixPropertyWithSameClassName(propertyName, Table.Name);
+                    if (previousFields.Add(fieldName))
+                        newType.Members.Add(codeGenerationHelper.CreateAutoProperty(typeName, fieldName, appPrefs.UseLazy));
                 }
             }
 
@@ -242,10 +284,16 @@ namespace NMG.Core.Generator
             {
                 var mapFromDbType = mapper.MapFromDBType(this.appPrefs.ServerType, column.DataType, column.DataLength, column.DataPrecision, column.DataScale);
 
-                var property = codeGenerationHelper.CreateAutoProperty(mapFromDbType, Formatter.FormatText(column.Name), column.IsNullable, appPrefs.UseLazy);
+                var fieldName = FixPropertyWithSameClassName(column.Name, Table.Name);
+                var property = codeGenerationHelper.CreateAutoProperty(mapFromDbType, Formatter.FormatText(fieldName), column.IsNullable, appPrefs.UseLazy);
                 AttachValidatorAttributes(ref property, column);
                 newType.Members.Add(property);
             }
+        }
+
+        private string FixPropertyWithSameClassName(string property, string className)
+        {
+            return property.ToLowerInvariant() == className.ToLowerInvariant() ? property + "Val" : property;
         }
 
         private CodeMemberMethod CreateCompositeKeyEqualsMethod(IList<string> columns)
@@ -253,8 +301,7 @@ namespace NMG.Core.Generator
             if (columns.Count == 0)
                 return null;
 
-            var method = new CodeMemberMethod
-            {
+            var method = new CodeMemberMethod {
                 Name = "Equals",
                 ReturnType = new CodeTypeReference(typeof(bool)),
                 Attributes = MemberAttributes.Public | MemberAttributes.Override,
@@ -278,15 +325,14 @@ namespace NMG.Core.Generator
                 foreach (var column in columns)
                 {
                     compareCode.Append(string.Format("{0} == t.{0}", column));
-                    compareCode.Append(column != lastCol ? " && " : ")");
+                    compareCode.Append(column != lastCol ? "\n\t\t\t && " : ")");
                 }
                 method.Statements.Add(new CodeSnippetStatement(compareCode.ToString()));
 
                 method.Statements.Add(new CodeSnippetStatement("\t\t\t\treturn true;"));
                 method.Statements.Add(new CodeSnippetStatement(string.Empty));
                 method.Statements.Add(new CodeSnippetStatement("\t\t\treturn false;"));
-            }
-            else if (appPrefs.Language == Language.VB)
+            } else if (appPrefs.Language == Language.VB)
             {
                 method.Statements.Add(new CodeSnippetStatement("\t\t\tIf obj Is Nothing Then Return False"));
                 method.Statements.Add(new CodeSnippetStatement(string.Format("\t\t\tDim t = TryCast(obj, {0})", className)));
@@ -314,8 +360,7 @@ namespace NMG.Core.Generator
             if (columns.Count == 0)
                 return null;
 
-            var method = new CodeMemberMethod
-            {
+            var method = new CodeMemberMethod {
                 Name = "GetHashCode",
                 ReturnType = new CodeTypeReference(typeof(int)),
                 Attributes = MemberAttributes.Public | MemberAttributes.Override,
@@ -324,18 +369,17 @@ namespace NMG.Core.Generator
             if (appPrefs.Language == Language.CSharp)
             {
                 // Create the if statement to compare if the obj equals another.
-                method.Statements.Add(new CodeSnippetStatement("\t\t\tint hash = 13;"));
+                method.Statements.Add(new CodeSnippetStatement("\t\t\tint hash = GetType().GetHashCode();"));
 
                 foreach (var column in columns)
                 {
                     method.Statements.Add(
-                        new CodeSnippetStatement(string.Format("\t\t\thash += {0}.GetHashCode();", column)));
+                        new CodeSnippetStatement(string.Format("\t\t\thash = (hash * 397) ^ {0}.GetHashCode();", column)));
                 }
 
                 method.Statements.Add(new CodeSnippetStatement(string.Empty));
                 method.Statements.Add(new CodeSnippetStatement("\t\t\treturn hash;"));
-            }
-            else if (appPrefs.Language == Language.VB)
+            } else if (appPrefs.Language == Language.VB)
             {
                 // Create the if statement to compare if the obj equals another.
                 method.Statements.Add(new CodeSnippetStatement("\t\t\tDim hash As Integer = 13"));
@@ -401,10 +445,12 @@ namespace NMG.Core.Generator
             entireContent = RemoveComments(entireContent);
             entireContent = AddStandardHeader(entireContent);
             entireContent = FixAutoProperties(entireContent);
-
+            entireContent = FixNullableTypes(entireContent);
+            //Fix Attrubutes with blank parenthesis
+            entireContent = entireContent.Replace("()]", "]");
+            entireContent = entireContent.Replace("\r\n", "\n").Replace("\n\n\n", "\n\n").Replace("\n\t\n\t", "\n\t");
             return entireContent;
         }
-
         // Hack : Auto property generator is not there in CodeDom.
         private string FixAutoProperties(string entireContent)
         {
@@ -424,8 +470,7 @@ namespace NMG.Core.Generator
                 builder.AppendLine("            }");
                 builder.Append("        }");
                 entireContent = entireContent.Replace(builder.ToString(), "{ get; set; }");
-            }
-            else if (appPrefs.Language == Language.VB)
+            } else if (appPrefs.Language == Language.VB)
             {
                 var blah = @"
             Get
@@ -434,6 +479,36 @@ namespace NMG.Core.Generator
             End Set
         End Property";
                 entireContent = entireContent.Replace(blah, string.Empty);
+            }
+            return entireContent;
+        }
+        // Hack : Fix Nullable Types, use "int?" instead of System.Nullable<int>.
+        private string FixNullableTypes(string entireContent)
+        {
+            if (appPrefs.Language == Language.CSharp)
+            {
+                entireContent = entireContent.Replace("System.Nullable<bool>", "bool?");
+                entireContent = entireContent.Replace("System.Nullable<int>", "int?");
+                entireContent = entireContent.Replace("System.Nullable<byte>", "byte?");
+                entireContent = entireContent.Replace("System.Nullable<short>", "short?");
+                entireContent = entireContent.Replace("System.Nullable<long>", "long?");
+                entireContent = entireContent.Replace("System.Nullable<decimal>", "decimal?");
+                entireContent = entireContent.Replace("System.Nullable<float>", "float?");
+                entireContent = entireContent.Replace("System.Nullable<double>", "double?");
+                entireContent = entireContent.Replace("System.Nullable<System.DateTime>", "DateTime?");
+                //Just remove the "System." from DateTime type. (we already have the "using System;" statement)
+                entireContent = entireContent.Replace("System.DateTime", "DateTime");
+            } else if (appPrefs.Language == Language.VB)
+            {
+                entireContent = entireContent.Replace("System.Nullable(Of Boolean)", "Boolean?");
+                entireContent = entireContent.Replace("System.Nullable(Of Integer)", "Integer?");
+                entireContent = entireContent.Replace("System.Nullable(Of Byte)", "Byte?");
+                entireContent = entireContent.Replace("System.Nullable(Of Short)", "Short?");
+                entireContent = entireContent.Replace("System.Nullable(Of Long)", "Long?");
+                entireContent = entireContent.Replace("System.Nullable(Of Decimal)", "Decimal?");
+                entireContent = entireContent.Replace("System.Nullable(Of Single)", "Single?");
+                entireContent = entireContent.Replace("System.Nullable(Of Double)", "Double?");
+                entireContent = entireContent.Replace("System.Nullable(Of Date)", "Date?");
             }
             return entireContent;
         }
@@ -450,6 +525,7 @@ namespace NMG.Core.Generator
                 scopeStatements.Add("System.ComponentModel");
                 scopeStatements.Add("System.ComponentModel.DataAnnotations");
             }
+            
             if (appPrefs.ValidatorStyle == ValidationStyle.Nhibernate)
             {
                 scopeStatements.Add("NHibernate.Validator.Constraints");
@@ -465,8 +541,7 @@ namespace NMG.Core.Generator
                 if (appPrefs.Language == Language.CSharp)
                 {
                     builder.AppendLine(string.Format("using {0};", statement));
-                }
-                else if (appPrefs.Language == Language.VB)
+                } else if (appPrefs.Language == Language.VB)
                 {
                     builder.AppendLine(string.Format("Imports {0}", statement));
                 }
@@ -491,6 +566,8 @@ namespace NMG.Core.Generator
 
         private string GetCompleteFilePath(CodeDomProvider provider, string className)
         {
+            if (className.ToLowerInvariant() == "con")
+                className = className + "Table";
             string fileName = filePath + className;
             return provider.FileExtension[0] == '.'
                        ? fileName + provider.FileExtension
