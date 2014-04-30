@@ -59,6 +59,7 @@ FROM rdb$relations");
 
             // Only tables
             sql.Append(" WHERE rdb$view_source IS NULL and rdb$system_flag = 0");
+            sql.Append(" ORDER BY rdb$relation_name");
 
             var tables = new List<FbTable>();
             using (var cmd = new FbCommand(sql.ToString(), conn))
